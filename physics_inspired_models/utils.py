@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utilities functions for Jax."""
-import collections
+from collections import abc
 import functools
 from typing import Any, Callable, Dict, Mapping, Union
 
@@ -176,7 +176,7 @@ def flatten_dict(d, parent_key: str = "", sep: str = "_") -> Dict[str, Any]:
   items = []
   for k, v in d.items():
     new_key = parent_key + sep + k if parent_key else k
-    if isinstance(v, collections.MutableMapping):
+    if isinstance(v, abc.MutableMapping):
       items.extend(flatten_dict(v, new_key, sep=sep).items())
     else:
       items.append((new_key, v))
@@ -220,11 +220,11 @@ class MultiBatchAccumulator(object):
       self._obj = jax.tree_map(lambda y: y * num_samples, averaged_values)
       self._num_samples = num_samples
     else:
-      self._obj_max = jax.tree_multimap(jnp.maximum, self._obj_max,
+      self._obj_max = jax.tree_map(jnp.maximum, self._obj_max,
                                         averaged_values)
-      self._obj_min = jax.tree_multimap(jnp.minimum, self._obj_min,
+      self._obj_min = jax.tree_map(jnp.minimum, self._obj_min,
                                         averaged_values)
-      self._obj = jax.tree_multimap(lambda x, y: x + y * num_samples, self._obj,
+      self._obj = jax.tree_map(lambda x, y: x + y * num_samples, self._obj,
                                     averaged_values)
       self._num_samples += num_samples
 
@@ -249,7 +249,7 @@ register_pytree_node(
 
 
 def inner_product(x: Any, y: Any) -> jnp.ndarray:
-  products = jax.tree_multimap(lambda x_, y_: jnp.sum(x_ * y_), x, y)
+  products = jax.tree_map(lambda x_, y_: jnp.sum(x_ * y_), x, y)
   return sum(jax.tree_leaves(products))
 
 
